@@ -1,0 +1,179 @@
+\set ECHO none
+CREATE TABLE can_cpartns(id serial primary key, can_cpartn can_cpartn unique);
+INSERT INTO can_cpartns(can_cpartn) VALUES('58876-004');
+INSERT INTO can_cpartns(can_cpartn) VALUES('000458876');
+INSERT INTO can_cpartns(can_cpartn) VALUES('012345678');
+INSERT INTO can_cpartns(can_cpartn) VALUES('091234567');
+INSERT INTO can_cpartns(can_cpartn) VALUES('020000004');
+INSERT INTO can_cpartns(can_cpartn) VALUES('040000002');
+INSERT INTO can_cpartns(can_cpartn) VALUES('030000003');
+INSERT INTO can_cpartns(can_cpartn) VALUES('10000-000'); -- test limits
+INSERT INTO can_cpartns(can_cpartn) VALUES('000000000'); -- not valid?
+INSERT INTO can_cpartns(can_cpartn) VALUES('000010000');
+INSERT INTO can_cpartns(can_cpartn) VALUES('99999-999');
+INSERT INTO can_cpartns(can_cpartn) VALUES('099999999');
+SELECT * FROM can_cpartns ORDER BY can_cpartn;
+ id | can_cpartn 
+----+------------
+  9 | 000000000
+  8 | 10000-000
+ 10 | 000010000
+  1 | 58876-004
+  2 | 000458876
+  3 | 012345678
+  5 | 020000004
+  7 | 030000003
+  6 | 040000002
+  4 | 091234567
+ 11 | 99999-999
+ 12 | 099999999
+(12 rows)
+
+SELECT MIN(can_cpartn) AS min FROM can_cpartns;
+    min    
+-----------
+ 000000000
+(1 row)
+
+SELECT MAX(can_cpartn) AS max FROM can_cpartns;
+    max    
+-----------
+ 099999999
+(1 row)
+
+-- index scan
+TRUNCATE can_cpartns;
+INSERT INTO can_cpartns(can_cpartn) SELECT '00004'||id FROM generate_series(5678, 8000) id;
+SELECT id,can_cpartn::text FROM can_cpartns WHERE can_cpartn = '000048000';
+  id  | can_cpartn 
+------+------------
+ 2335 | 000048000
+(1 row)
+
+SET enable_seqscan = false;
+SELECT id,can_cpartn::text FROM can_cpartns WHERE can_cpartn = '000046000';
+ id  | can_cpartn 
+-----+------------
+ 335 | 000046000
+(1 row)
+
+SELECT id,can_cpartn FROM can_cpartns WHERE can_cpartn >= '000047000' LIMIT 5;
+  id  | can_cpartn 
+------+------------
+ 1335 | 000047000
+ 1336 | 000047001
+ 1337 | 000047002
+ 1338 | 000047003
+ 1339 | 000047004
+(5 rows)
+
+SELECT count(id) FROM can_cpartns;
+ count 
+-------
+  2323
+(1 row)
+
+SELECT count(id) FROM can_cpartns WHERE can_cpartn <> ('000046500'::text)::can_cpartn;
+ count 
+-------
+  2322
+(1 row)
+
+RESET enable_seqscan;
+-- operators and conversions
+SELECT '000010000'::can_cpartn < '000010000'::can_cpartn;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT '000010000'::can_cpartn > '000010000'::can_cpartn;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT '000010000'::can_cpartn < '000010001'::can_cpartn;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '000010000'::can_cpartn > '000010001'::can_cpartn;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT '000010000'::can_cpartn <= '000010000'::can_cpartn;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '000010000'::can_cpartn >= '000010000'::can_cpartn;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '000010000'::can_cpartn <= '000010001'::can_cpartn;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '000010000'::can_cpartn >= '000010001'::can_cpartn;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT '000010000'::can_cpartn <> '000010000'::can_cpartn;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT '000010000'::can_cpartn <> '000010001'::can_cpartn;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '000010000'::can_cpartn = '000010000'::can_cpartn;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT '000010000'::can_cpartn = '000010001'::can_cpartn;
+ ?column? 
+----------
+ f
+(1 row)
+
+-- COPY FROM/TO
+TRUNCATE can_cpartns;
+COPY can_cpartns(can_cpartn) FROM STDIN;
+COPY can_cpartns TO STDOUT;
+2336	10000-000
+2337	099999999
+-- clean up --
+DROP TABLE can_cpartns;
+-- errors
+SELECT ''::can_cpartn;
+ERROR:  Invalid format in input data "".
+LINE 1: SELECT ''::can_cpartn;
+               ^
+HINT:  A valid CPA routing transit number uses a BBBBB-III or 0IIIBBBBB format.
+SELECT '100000000'::can_cpartn;
+ERROR:  Invalid number of digits (8) in input data "100000000".
+LINE 1: SELECT '100000000'::can_cpartn;
+               ^
+HINT:  A valid CPA routing transit number consists of 8 digits.
+SELECT '!'::can_cpartn;
+ERROR:  Unexpected character '!' in input data "!".
+LINE 1: SELECT '!'::can_cpartn;
+               ^
+HINT:  A valid CPA routing transit number consists of digits only.

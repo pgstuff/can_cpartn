@@ -1,0 +1,4 @@
+# can_cpartn extension
+comment = 'Canadian Payments Association routing transit number data type'
+default_version = '0.0.1'
+relocatable = false
