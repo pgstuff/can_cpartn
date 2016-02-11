@@ -23,7 +23,7 @@ typedef uint32 can_cpartn_t;
 Datum can_cpartn_in(PG_FUNCTION_ARGS);
 Datum can_cpartn_out(PG_FUNCTION_ARGS);
 Datum can_cpartn_to_text(PG_FUNCTION_ARGS);
-Datum text_to_can_cpartn(PG_FUNCTION_ARGS);
+Datum can_cpartn_from_text(PG_FUNCTION_ARGS);
 Datum can_cpartn_send(PG_FUNCTION_ARGS);
 Datum can_cpartn_recv(PG_FUNCTION_ARGS);
 Datum can_cpartn_lt(PG_FUNCTION_ARGS);
@@ -81,9 +81,9 @@ can_cpartn_to_text(PG_FUNCTION_ARGS)
     PG_RETURN_TEXT_P(can_cpartn_text);
 }
 
-PG_FUNCTION_INFO_V1(text_to_can_cpartn);
+PG_FUNCTION_INFO_V1(can_cpartn_from_text);
 Datum
-text_to_can_cpartn(PG_FUNCTION_ARGS)
+can_cpartn_from_text(PG_FUNCTION_ARGS)
 {
     text  *can_cpartn_text = PG_GETARG_TEXT_P(0);
     char  *can_cpartn_str = DatumGetCString(DirectFunctionCall1(textout, PointerGetDatum(can_cpartn_text)));
